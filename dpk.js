@@ -15,13 +15,22 @@ exports.deterministicPartitionKey = (event) => {
     } else {
       candidate = JSON.stringify(event.partitionKey);
     }
+
+    if (candidate.length > MAX_PARTITION_KEY_LENGTH) {
+      candidate = crypto.createHash("sha3-512").update(candidate).digest("hex");
+    }
   } else {
     const data = JSON.stringify(event);
     candidate = crypto.createHash("sha3-512").update(data).digest("hex");
   }
 
-  if (candidate.length > MAX_PARTITION_KEY_LENGTH) {
-    candidate = crypto.createHash("sha3-512").update(candidate).digest("hex");
-  }
   return candidate;
 };
+
+/**
+ * Bad input should be rejected at the start. Otherwise, return should come near the end.
+ * Branching should make it easy to see what the alternatives are.
+ * The Hashing algortithm creates a key shorter than required, so no length check
+ * is required.
+ 
+ */
